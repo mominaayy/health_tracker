@@ -1,0 +1,58 @@
+[debug] [2025-04-27T12:48:50.111Z] ----------------------------------------------------------------------
+[debug] [2025-04-27T12:48:50.120Z] Command:       C:\Program Files\nodejs\node.exe C:\Users\HP\AppData\Roaming\npm\node_modules\firebase-tools\lib\bin\firebase.js login
+[debug] [2025-04-27T12:48:50.121Z] CLI Version:   14.2.1
+[debug] [2025-04-27T12:48:50.122Z] Platform:      win32
+[debug] [2025-04-27T12:48:50.122Z] Node Version:  v22.13.1
+[debug] [2025-04-27T12:48:50.123Z] Time:          Sun Apr 27 2025 17:48:50 GMT+0500 (Pakistan Standard Time)
+[debug] [2025-04-27T12:48:50.123Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2025-04-27T12:48:50.130Z] >>> [apiv2][query] GET https://firebase-public.firebaseio.com/cli.json [none]
+[info] i  Firebase optionally collects CLI and Emulator Suite usage and error reporting information to help improve our products. Data is collected in accordance with Google's privacy policy (https://policies.google.com/privacy) and is not used to identify you.
+ 
+[debug] [2025-04-27T12:48:54.458Z] <<< [apiv2][status] GET https://firebase-public.firebaseio.com/cli.json 200
+[debug] [2025-04-27T12:48:54.458Z] <<< [apiv2][body] GET https://firebase-public.firebaseio.com/cli.json {"cloudBuildErrorAfter":1594252800000,"cloudBuildWarnAfter":1590019200000,"defaultNode10After":1594252800000,"minVersion":"3.0.5","node8DeploysDisabledAfter":1613390400000,"node8RuntimeDisabledAfter":1615809600000,"node8WarnAfter":1600128000000}
+[info] i  To change your data collection preference at any time, run `firebase logout` and log in again. 
+[info] 
+[info] Visit this URL on this device to log in:
+[info] https://accounts.google.com/o/oauth2/auth?client_id=563584335869-fgrhgmd47bqnekij5i8b5pr03ho849e6.apps.googleusercontent.com&scope=email%20openid%20https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fcloudplatformprojects.readonly%20https%3A%2F%2Fwww.googleapis.com%2Fauth%2Ffirebase%20https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fcloud-platform&response_type=code&state=285931222&redirect_uri=http%3A%2F%2Flocalhost%3A9005
+[info] 
+[info] Waiting for authentication...
+[debug] [2025-04-27T14:13:54.274Z] >>> [apiv2][query] POST https://accounts.google.com/o/oauth2/token [none]
+[debug] [2025-04-27T14:13:54.274Z] >>> [apiv2][body] POST https://accounts.google.com/o/oauth2/token [omitted]
+[debug] [2025-04-27T14:13:58.492Z] <<< [apiv2][status] POST https://accounts.google.com/o/oauth2/token 200
+[debug] [2025-04-27T14:13:58.492Z] <<< [apiv2][body] POST https://accounts.google.com/o/oauth2/token [omitted]
+[info] 
+[info] +  Success! Logged in as mominaejaz1234@gmail.com 
+[debug] [2025-04-27T14:14:03.962Z] Error: Timed out.
+    at Timeout._onTimeout (C:\Users\HP\AppData\Roaming\npm\node_modules\firebase-tools\lib\utils.js:269:49)
+    at listOnTimeout (node:internal/timers:594:17)
+    at process.processTimers (node:internal/timers:529:7)
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-04-27T14:16:42.702Z] ----------------------------------------------------------------------
+[debug] [2025-04-27T14:16:42.709Z] Command:       C:\Program Files\nodejs\node.exe C:\Users\HP\AppData\Roaming\npm\node_modules\firebase-tools\lib\bin\firebase.js init
+[debug] [2025-04-27T14:16:42.710Z] CLI Version:   14.2.1
+[debug] [2025-04-27T14:16:42.710Z] Platform:      win32
+[debug] [2025-04-27T14:16:42.710Z] Node Version:  v22.13.1
+[debug] [2025-04-27T14:16:42.711Z] Time:          Sun Apr 27 2025 19:16:42 GMT+0500 (Pakistan Standard Time)
+[debug] [2025-04-27T14:16:42.711Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2025-04-27T14:16:42.731Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2025-04-27T14:16:42.732Z] > authorizing via signed-in user (mominaejaz1234@gmail.com)
+[info] 
+     ######## #### ########  ######## ########     ###     ######  ########
+     ##        ##  ##     ## ##       ##     ##  ##   ##  ##       ##
+     ######    ##  ########  ######   ########  #########  ######  ######
+     ##        ##  ##    ##  ##       ##     ## ##     ##       ## ##
+     ##       #### ##     ## ######## ########  ##     ##  ######  ########
+
+You're about to initialize a Firebase project in this directory:
+
+  C:\Users\HP\OneDrive\Desktop\Doctor_App\DoctorApp
+
+[debug] [2025-04-27T14:18:10.845Z] Error: Timed out.
+    at Timeout._onTimeout (C:\Users\HP\AppData\Roaming\npm\node_modules\firebase-tools\lib\utils.js:269:49)
+    at listOnTimeout (node:internal/timers:594:17)
+    at process.processTimers (node:internal/timers:529:7)
+[error] 
+[error] Error: An unexpected error has occurred.
