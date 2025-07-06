@@ -1,17 +1,57 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Modal } from 'react-native';
 import { MaterialIcons, Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { useAuthStore } from '../../store/authStore'; // Adjust path as needed
+import { API_BASE_URL } from '../../utils/constants';
 
 const DoctorHomeScreen = () => {
   const router = useRouter();
   const [menuVisible, setMenuVisible] = useState(false);
+  const [recentPatients, setRecentPatients] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const token = useAuthStore.getState().token;
+  const doctorId = useAuthStore.getState().localId;
+  const limit = 5;
 
-  const recentPatients = [
-    { id: 1, name: 'Mominah Ejaz', lastVisit: '2d ago', status: 'Recovering' },
-    { id: 2, name: 'Esha Imran', lastVisit: '1d ago', status: 'In Treatment' },
-    { id: 3, name: 'Johra Binte Ejaz', lastVisit: '3d ago', status: 'Follow-up' },
-  ];
+  useEffect(() => {
+    const fetchRecentPatients = async () => {
+      try {
+        const response = await fetch(
+          `${API_BASE_URL}/doctor/${doctorId}/recent-patients?limit=${limit}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        const data = await response.json();
+        if (response.ok) {
+          const formatted = data.recent_patients.map((p) => ({
+            id: p.id,
+            name: p.name,
+            lastVisit: formatRelativeTime(p.last_appointment.date), // optional: relative formatting
+            status: p.last_appointment.status,
+          }));
+          setRecentPatients(formatted);
+        } else {
+          console.error(data.error || 'Failed to fetch');
+        }
+      } catch (error) {
+        console.error('Fetch error:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchRecentPatients();
+  }, []);
+
+  const formatRelativeTime = (isoDate) => {
+    const diff = Math.floor((Date.now() - new Date(isoDate)) / (1000 * 60 * 60 * 24));
+    return diff === 0 ? 'Today' : `${diff}d ago`;
+  };
+
 
   const handleActionPress = (screen: string) => {
     router.push(`/${screen}`);

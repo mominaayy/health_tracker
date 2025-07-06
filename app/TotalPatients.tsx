@@ -1,42 +1,67 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, FlatList, TextInput } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import {
+  View, Text, StyleSheet, TouchableOpacity, FlatList, TextInput, ActivityIndicator
+} from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { useAuthStore } from '../store/authStore'; // Adjust path as needed
+import { API_BASE_URL } from '../utils/constants';
 
 const TotalPatientsScreen = () => {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFilter, setSelectedFilter] = useState('all');
-  
-  // Sample patient data
-  const patients = [
-    { 
-      id: 1, 
-      name: 'Mominah Ejaz',
-      age: 35,
-      gender: 'Female',
-      lastVisit: '2023-07-15',
-      status: 'Recovered'
-    },
-    { 
-      id: 2, 
-      name: 'Esha Imran',
-      age: 28,
-      gender: 'Male',
-      lastVisit: '2023-07-14',
-      status: 'In Treatment'
-    },
-    // Add more patients...
-  ];
+  const [patients, setPatients] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  // Filtering system
-  const filteredPatients = patients.filter(patient => {
+  const token = useAuthStore.getState().token;
+  const doctorId = useAuthStore.getState().localId;
+
+  useEffect(() => {
+    const limit = 100;
+    const fetchPatients = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/doctor/${doctorId}/recent-patients?limit=${limit}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        const json = await response.json();
+
+        if (response.ok && json.recent_patients) {
+          setPatients(json.recent_patients);
+        } else {
+          console.error('Failed to load patients:', json.error);
+        }
+      } catch (error) {
+        console.error('Error fetching patients:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPatients();
+  }, []);
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'Recovered': return '#c8e6c9';
+      case 'In Treatment': return '#fff3e0';
+      case 'Critical': return '#ffcdd2';
+      default: return '#e0e0e0';
+    }
+  };
+
+  const filteredPatients = patients.filter((patient) => {
     const matchesSearch = patient.name.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesFilter = selectedFilter === 'all' || patient.status === selectedFilter;
+    const status = patient.last_appointment?.status || 'Unknown';
+    const matchesFilter = selectedFilter === 'all' || status === selectedFilter;
     return matchesSearch && matchesFilter;
   });
 
-  // Patient card component
   const PatientItem = ({ patient }) => (
     <TouchableOpacity style={styles.patientCard}>
       <View style={styles.patientInfo}>
@@ -47,10 +72,17 @@ const TotalPatientsScreen = () => {
         </View>
         <View style={styles.detailRow}>
           <MaterialIcons name="event" size={16} color="#284b63" />
-          <Text style={styles.detailText}>Last visit: {patient.lastVisit}</Text>
+          <Text style={styles.detailText}>
+            Last visit: {formatDate(patient.last_appointment?.date)}
+          </Text>
         </View>
-        <View style={[styles.statusBadge, {backgroundColor: getStatusColor(patient.status)}]}>
-          <Text style={styles.statusText}>{patient.status}</Text>
+        <View
+          style={[
+            styles.statusBadge,
+            { backgroundColor: getStatusColor(patient.last_appointment?.status) },
+          ]}
+        >
+          <Text style={styles.statusText}>{patient.last_appointment?.status}</Text>
         </View>
       </View>
       <TouchableOpacity style={styles.callButton}>
@@ -59,14 +91,14 @@ const TotalPatientsScreen = () => {
     </TouchableOpacity>
   );
 
-  // Status color coding
-  const getStatusColor = (status) => {
-    switch(status) {
-      case 'Recovered': return '#c8e6c9';
-      case 'In Treatment': return '#fff3e0';
-      case 'Critical': return '#ffcdd2';
-      default: return '#e0e0e0';
-    }
+  const formatDate = (isoDate) => {
+    if (!isoDate) return 'N/A';
+    const date = new Date(isoDate);
+    return date.toLocaleDateString('en-GB', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+    });
   };
 
   return (
@@ -82,7 +114,7 @@ const TotalPatientsScreen = () => {
         </TouchableOpacity>
       </View>
 
-      {/* Search and Filter */}
+      {/* Search & Filter */}
       <View style={styles.searchContainer}>
         <TextInput
           style={styles.searchInput}
@@ -97,14 +129,16 @@ const TotalPatientsScreen = () => {
               key={filter}
               style={[
                 styles.filterButton,
-                selectedFilter === filter && styles.selectedFilter
+                selectedFilter === filter && styles.selectedFilter,
               ]}
               onPress={() => setSelectedFilter(filter)}
             >
-              <Text style={[
-                styles.filterText,
-                selectedFilter === filter && styles.selectedFilterText
-              ]}>
+              <Text
+                style={[
+                  styles.filterText,
+                  selectedFilter === filter && styles.selectedFilterText,
+                ]}
+              >
                 {filter.charAt(0).toUpperCase() + filter.slice(1)}
               </Text>
             </TouchableOpacity>
@@ -112,22 +146,23 @@ const TotalPatientsScreen = () => {
         </View>
       </View>
 
-      {/* Patient List */}
-      <FlatList
-        data={filteredPatients}
-        renderItem={({ item }) => <PatientItem patient={item} />}
-        keyExtractor={item => item.id.toString()}
-        contentContainerStyle={styles.listContent}
-        ListEmptyComponent={
-          <Text style={styles.emptyText}>No patients found</Text>
-        }
-      />
+      {/* List */}
+      {loading ? (
+        <ActivityIndicator size="large" color="#284b63" style={{ marginTop: 30 }} />
+      ) : (
+        <FlatList
+          data={filteredPatients}
+          renderItem={({ item }) => <PatientItem patient={item} />}
+          keyExtractor={(item) => item.id.toString()}
+          contentContainerStyle={styles.listContent}
+          ListEmptyComponent={
+            <Text style={styles.emptyText}>No patients found</Text>
+          }
+        />
+      )}
 
-      {/* Floating Action Button */}
-      <TouchableOpacity 
-        style={styles.fab}
-        onPress={() => router.push('/NewPatient')}
-      >
+      {/* FAB */}
+      <TouchableOpacity style={styles.fab} onPress={() => router.push('/NewPatient')}>
         <MaterialIcons name="add" size={28} color="white" />
       </TouchableOpacity>
     </View>
@@ -135,25 +170,14 @@ const TotalPatientsScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#ffffff',
-    padding: 16,
-  },
+  container: { flex: 1, backgroundColor: '#ffffff', padding: 16 },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 20,
+    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20,
   },
   screenTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#284b63',
+    fontSize: 24, fontWeight: 'bold', color: '#284b63',
   },
-  searchContainer: {
-    marginBottom: 20,
-  },
+  searchContainer: { marginBottom: 20 },
   searchInput: {
     backgroundColor: '#f5f5f5',
     borderRadius: 10,
@@ -162,27 +186,14 @@ const styles = StyleSheet.create({
     color: '#284b63',
   },
   filterContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    marginTop: 10,
-    gap: 8,
+    flexDirection: 'row', flexWrap: 'wrap', marginTop: 10, gap: 8,
   },
   filterButton: {
-    paddingVertical: 8,
-    paddingHorizontal: 15,
-    borderRadius: 20,
-    backgroundColor: '#e8e8e8',
+    paddingVertical: 8, paddingHorizontal: 15, borderRadius: 20, backgroundColor: '#e8e8e8',
   },
-  selectedFilter: {
-    backgroundColor: '#284b63',
-  },
-  filterText: {
-    color: '#666',
-    fontSize: 14,
-  },
-  selectedFilterText: {
-    color: 'white',
-  },
+  selectedFilter: { backgroundColor: '#284b63' },
+  filterText: { color: '#666', fontSize: 14 },
+  selectedFilterText: { color: 'white' },
   patientCard: {
     flexDirection: 'row',
     backgroundColor: 'white',
@@ -197,24 +208,15 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     elevation: 3,
   },
-  patientInfo: {
-    flex: 1,
-  },
+  patientInfo: { flex: 1 },
   patientName: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#284b63',
-    marginBottom: 5,
+    fontSize: 18, fontWeight: '600', color: '#284b63', marginBottom: 5,
   },
   detailRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 3,
+    flexDirection: 'row', alignItems: 'center', marginBottom: 3,
   },
   detailText: {
-    fontSize: 14,
-    color: '#666',
-    marginLeft: 5,
+    fontSize: 14, color: '#666', marginLeft: 5,
   },
   statusBadge: {
     alignSelf: 'flex-start',
@@ -224,9 +226,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   statusText: {
-    fontSize: 12,
-    color: '#284b63',
-    fontWeight: '500',
+    fontSize: 12, color: '#284b63', fontWeight: '500',
   },
   callButton: {
     backgroundColor: '#284b63',
@@ -247,14 +247,9 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   emptyText: {
-    textAlign: 'center',
-    color: '#999',
-    marginTop: 30,
-    fontSize: 16,
+    textAlign: 'center', color: '#999', marginTop: 30, fontSize: 16,
   },
-  listContent: {
-    paddingBottom: 80,
-  },
+  listContent: { paddingBottom: 80 },
 });
 
 export default TotalPatientsScreen;

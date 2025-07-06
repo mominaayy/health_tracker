@@ -1,18 +1,67 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, ActivityIndicator } from 'react-native';
 import { MaterialIcons, Feather, FontAwesome5 } from '@expo/vector-icons';
+import { useAuthStore } from '../store/authStore'; // Adjust path as needed
+import { API_BASE_URL } from '../utils/constants';
 
 const TodaysAppointmentsScreen = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isFocused, setIsFocused] = useState(false);
-  
-  const appointments = [
-    { id: 1, name: 'Mominah Ejaz', time: '9:00 AM', status: 'Confirmed' },
-    { id: 2, name: 'Esha Imran', time: '10:30 AM', status: 'Pending' },
-    { id: 3, name: 'Johra Binte Ejaz', time: '12:00 PM', status: 'Completed' },
-    { id: 4, name: 'Ali Khan', time: '2:00 PM', status: 'Confirmed' },
-    { id: 5, name: 'Fatima Noor', time: '3:30 PM', status: 'Cancelled' },
-  ];
+  const [appointments, setAppointments] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const token = useAuthStore.getState().token;
+  const doctorId = useAuthStore.getState().localId;
+
+
+  useEffect(() => {
+    const fetchAppointments = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/doctor/${doctorId}/appointments`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          const todayDate = new Date().toISOString().split("T")[0];
+
+          const todayAppointments = data.appointments.filter(
+            (apt) => apt.date === todayDate
+          ).map((apt) => ({
+            id: apt.id,
+            name: apt.patient_name,
+            time: formatTime(apt.time),
+            status: apt.status,
+          }));
+
+          setAppointments(todayAppointments);
+        } else {
+          console.error(data.error || "Failed to fetch");
+        }
+      } catch (err) {
+        console.error("API Error:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAppointments();
+  }, []);
+
+  const formatTime = (isoTime) => {
+    const date = new Date(`1970-01-01T${isoTime}`);
+    const hours = date.getHours();
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+    const suffix = hours >= 12 ? 'PM' : 'AM';
+    const adjustedHours = ((hours + 11) % 12 + 1); // convert 24h to 12h
+    return `${adjustedHours}:${minutes} ${suffix}`;
+  };
+
+  const filteredAppointments = appointments.filter(appointment =>
+    appointment.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   const getStatusDetails = (status) => {
     switch (status) {
@@ -29,9 +78,45 @@ const TodaysAppointmentsScreen = () => {
     }
   };
 
-  const filteredAppointments = appointments.filter(appointment =>
-    appointment.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  {loading ? (
+    <ActivityIndicator size="large" color="#284b63" style={{ marginTop: 40 }} />
+  ) : (
+    filteredAppointments.map(appointment => {
+      const statusDetails = getStatusDetails(appointment.status);
+      
+      return (
+        <TouchableOpacity 
+          key={appointment.id} 
+          style={styles.card}
+          activeOpacity={0.9}
+        >
+          <View style={styles.avatar}>
+            <FontAwesome5 name="user-circle" size={32} color="#284b63" />
+          </View>
+
+          <View style={styles.infoContainer}>
+            <Text style={styles.name}>{appointment.name}</Text>
+            <View style={styles.timeContainer}>
+              <Feather name="clock" size={14} color="#6b7280" />
+              <Text style={styles.time}>{appointment.time}</Text>
+            </View>
+          </View>
+
+          <View style={[styles.statusBadge, { backgroundColor: statusDetails.bg }]}>
+            <Feather 
+              name={statusDetails.icon} 
+              size={14} 
+              color={statusDetails.color} 
+              style={styles.statusIcon}
+            />
+            <Text style={[styles.statusText, { color: statusDetails.color }]}>
+              {appointment.status}
+            </Text>
+          </View>
+        </TouchableOpacity>
+      );
+    })
+  )}
 
   return (
     <ScrollView style={styles.container}>

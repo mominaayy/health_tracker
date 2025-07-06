@@ -2,6 +2,9 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ScrollView, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
+import { API_BASE_URL } from "../utils/constants";
+import { useAuthStore } from '../store/authStore'; 
+
 
 const NewPatient = () => {
   const router = useRouter();
@@ -19,18 +22,51 @@ const NewPatient = () => {
     setForm({ ...form, [field]: value });
   };
 
-  const handleSubmit = () => {
+  // Normalize gender to match enum values
+  const normalizeGender = (value: string) => {
+    const lower = value.trim().toLowerCase();
+    if (lower === 'male') return 'MALE';
+    if (lower === 'female') return 'FEMALE';
+    return 'OTHER';
+  };
+
+  const handleSubmit = async () => {
     if (!Object.values(form).every(field => field.trim())) {
       Alert.alert('Missing Information', 'Please fill in all required fields');
       return;
     }
 
-    // Simulated API call
-    setTimeout(() => {
-      Alert.alert('Success', 'Patient registration completed', [
-        { text: 'OK', onPress: () => router.back() }
-      ]);
-    }, 500);
+    const token = useAuthStore.getState().token;
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/patient/`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          full_name: form.name,
+          age: form.age,
+          gender: normalizeGender(form.gender),
+          phone_number: form.phone,
+          medical_condition: form.condition
+        }),
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        Alert.alert('Success', result.message, [
+          { text: 'OK', onPress: () => router.back() }
+        ]);
+      } else {
+        Alert.alert('Error', result.error || 'Something went wrong');
+      }
+    } catch (err) {
+      console.error(err);
+      Alert.alert('Network Error', 'Could not connect to server');
+    }
   };
 
   return (
