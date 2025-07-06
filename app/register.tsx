@@ -1,100 +1,187 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Alert } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import {
+  View, Text, TextInput, TouchableOpacity,
+  StyleSheet, Image, Alert
+} from 'react-native';
+import { useRouter } from 'expo-router';
+import { API_BASE_URL } from '../utils/constants'; // Adjust path if needed
 
-const DoctorSignUpScreen = () => {
-  const navigation = useNavigation();
+export default function RegisterScreen() {
+  const router = useRouter();
 
-  const [doctor, setDoctor] = useState({
-    name:'',
-    email:'',
-    password:'',
-    specialty:'',
-    experience:'',
-    language:'',
-    bio:''
-  });
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleInputChange = (field, value) => {
-    setDoctor(prev => ({ ...prev, [field]: value }));
-  };
-
-  const handleSignUp = () => {
-    if (
-      doctor.name && doctor.email && doctor.password &&
-      doctor.specialty && doctor.experience && doctor.language && doctor.bio
-    ) {
-      // Navigate to profile with doctor data
-      navigation.navigate('DoctorProfileScreen', { doctor });
-    } else {
+  const handleSignUp = async () => {
+    if (!email || !password || !confirmPassword) {
       Alert.alert('Missing Fields', 'Please fill in all fields.');
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      Alert.alert('Password Mismatch', 'Passwords do not match.');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const response = await fetch(`${API_BASE_URL}/auth/signup`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          email,
+          password,
+          role: 'DOCTOR'
+        })
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        Alert.alert('Success', 'Account created successfully!');
+        router.push('/login'); // Or wherever you want to go
+      } else {
+        Alert.alert('Signup Failed', result?.error || 'Something went wrong.');
+      }
+    } catch (error) {
+      Alert.alert('Network Error', 'Unable to connect to server.');
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>Doctor Sign Up</Text>
+    <View style={styles.container}>
+      <Text style={styles.title}>Create Account</Text>
+      <Text style={styles.subtitle}>to get started now!</Text>
 
-      {[
-        { label: 'Full Name', field: 'name' },
-        { label: 'Email', field: 'email' },
-        { label: 'Password', field: 'password', secure: true },
-        { label: 'Specialty', field: 'specialty' },
-        { label: 'Experience (e.g., 10 years)', field: 'experience' },
-        { label: 'Languages Spoken', field: 'language' },
-        { label: 'Bio', field: 'bio', multiline: true },
-      ].map(({ label, field, secure, multiline }) => (
-        <TextInput
-          key={field}
-          style={[styles.input, multiline && { height: 100 }]}
-          placeholder={label}
-          secureTextEntry={secure}
-          multiline={multiline}
-          value={doctor[field]}
-          onChangeText={(text) => handleInputChange(field, text)}
-        />
-      ))}
+      <TextInput
+        style={styles.input}
+        placeholder="Email Address"
+        placeholderTextColor="#ddd"
+        keyboardType="email-address"
+        autoCapitalize="none"
+        value={email}
+        onChangeText={setEmail}
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Password"
+        placeholderTextColor="#ddd"
+        secureTextEntry
+        value={password}
+        onChangeText={setPassword}
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Confirm Password"
+        placeholderTextColor="#ddd"
+        secureTextEntry
+        value={confirmPassword}
+        onChangeText={setConfirmPassword}
+      />
 
-      <TouchableOpacity style={styles.button} onPress={handleSignUp}>
-        <Text style={styles.buttonText}>Sign Up</Text>
+      <TouchableOpacity
+        style={styles.signupButton}
+        onPress={handleSignUp}
+        disabled={loading}
+      >
+        <Text style={styles.signupText}>
+          {loading ? 'Signing Up...' : 'Sign Up'}
+        </Text>
       </TouchableOpacity>
-    </ScrollView>
-  );
-};
 
-export default DoctorSignUpScreen;
+      <Text style={styles.orText}>Or Sign Up with</Text>
+
+      <View style={styles.socialContainer}>
+        <TouchableOpacity style={styles.socialButton}>
+          <Image
+            source={{ uri: 'https://img.icons8.com/color/48/google-logo.png' }}
+            style={styles.socialIcon}
+          />
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.socialButton}>
+          <Image
+            source={{ uri: 'https://img.icons8.com/color/48/facebook-new.png' }}
+            style={styles.socialIcon}
+          />
+        </TouchableOpacity>
+      </View>
+
+      <TouchableOpacity onPress={() => router.push('/login')}>
+        <Text style={styles.loginText}>
+          Already have an account? <Text style={{ fontWeight: 'bold' }}>Login Now</Text>
+        </Text>
+      </TouchableOpacity>
+    </View>
+  );
+}
 
 const styles = StyleSheet.create({
   container: {
-    padding: 20,
-    backgroundColor: '#ffffff',
-    flexGrow: 1,
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 30,
+    backgroundColor: '#284b63',
   },
   title: {
     fontSize: 26,
     fontWeight: 'bold',
-    color: '#284b63',
-    marginBottom: 24,
-    textAlign: 'center',
+    color: '#fff',
+  },
+  subtitle: {
+    fontSize: 16,
+    color: '#ddd',
+    marginBottom: 30,
   },
   input: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 12,
-    padding: 12,
-    marginBottom: 16,
-    backgroundColor: '#f9f9f9',
-  },
-  button: {
-    backgroundColor: '#284b63',
-    padding: 16,
-    borderRadius: 12,
-    alignItems: 'center',
-    marginTop: 16,
-  },
-  buttonText: {
+    width: '100%',
+    backgroundColor: '#3B677A',
+    padding: 14,
+    borderRadius: 10,
     color: '#fff',
-    fontWeight: '600',
+    fontSize: 14,
+    marginBottom: 12,
+  },
+  signupButton: {
+    width: '100%',
+    backgroundColor: '#fff',
+    paddingVertical: 14,
+    borderRadius: 10,
+    alignItems: 'center',
+    marginBottom: 15,
+  },
+  signupText: {
+    color: '#284b63',
     fontSize: 16,
+    fontWeight: 'bold',
+  },
+  orText: {
+    color: '#ddd',
+    marginBottom: 10,
+  },
+  socialContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginBottom: 20,
+  },
+  socialButton: {
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    padding: 10,
+    marginHorizontal: 10,
+  },
+  socialIcon: {
+    width: 30,
+    height: 30,
+  },
+  loginText: {
+    color: '#ddd',
+    fontSize: 14,
   },
 });
