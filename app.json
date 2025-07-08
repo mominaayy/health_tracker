@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "DoctorApp",
-    "slug": "DoctorApp",
+    "slug": "hp",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -47,6 +47,7 @@
       "eas": {
         "projectId": "6f36b497-65db-487b-a93a-2468a3b9e786"
       }
-    }
+    },
+    "owner": "healthtracker"
   }
 }
