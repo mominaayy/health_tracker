@@ -37,6 +37,7 @@ const NewPatient = () => {
     }
 
     const token = useAuthStore.getState().token;
+    const userId = useAuthStore.getState().uid;
 
     try {
       const response = await fetch(`${API_BASE_URL}/patient/`, {
@@ -50,16 +51,17 @@ const NewPatient = () => {
           age: form.age,
           gender: normalizeGender(form.gender),
           phone_number: form.phone,
-          medical_condition: form.condition
+          medical_condition: form.condition,
+          user_firebase_uid: userId,
+
         }),
       });
 
       const result = await response.json();
 
       if (response.ok) {
-        Alert.alert('Success', result.message, [
-          { text: 'OK', onPress: () => router.back() }
-        ]);
+        Alert.alert('New Patient Added.', result.message);
+        router.replace("/(tabs)/home")
       } else {
         Alert.alert('Error', result.error || 'Something went wrong');
       }

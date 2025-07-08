@@ -51,17 +51,18 @@ const LoginScreen = () => {
 
           const profileData = await profileResponse.json();
 
-          if (!profileResponse.ok) {
-            console.warn("Doctor profile not found:", profileData.error);
-            Alert.alert("Notice", "Login succeeded but doctor profile was not found.");
-          } else {
-            setLocalId(profileData?.id)
-            console.log("Profile:", profileData);
-            // optionally store doctor profile in a global store here
-          }
+          if (profileResponse.ok) {
+            setLocalId(profileData?.id); // store doctor DB ID
+            console.log("Profile found:", profileData);
 
-          Alert.alert("Success", "Login successful!");
-          router.replace("/(tabs)/home");
+            Alert.alert("Success", "Login successful!");
+            router.replace("/(tabs)/home"); // send to home screen
+          } else if (profileResponse.status === 404) {
+            console.log("Profile not found, redirecting to creation page.");
+            router.push("./create-profile"); // send to profile creation screen
+          } else {
+            throw new Error(profileData?.error || "Unexpected error while fetching profile");
+          }
         } catch (innerError) {
           console.error("Error inside IF block:", innerError);
           Alert.alert("Internal Error", "Something went wrong after login.");
