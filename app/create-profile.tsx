@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import {
   View,
+  ScrollView,
   Text,
   TextInput,
   TouchableOpacity,
@@ -108,7 +109,7 @@ export default function CreateDoctorProfileScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container}>
       <Text style={styles.heading}>Create Doctor Profile</Text>
 
       <Text style={styles.label}>Full Name</Text>
@@ -163,7 +164,7 @@ export default function CreateDoctorProfileScreen() {
           onChange={onTimeChange}
         />
       )}
-    </View>
+    </ScrollView>
   );
 }
 

@@ -5,6 +5,8 @@ import { useRouter } from 'expo-router';
 import { useAuthStore } from '../../store/authStore'; // Adjust path as needed
 import { API_BASE_URL } from '../../utils/constants';
 
+import DoctorProfileScreen from './profile'; 
+
 const DoctorHomeScreen = () => {
   const router = useRouter();
   const [menuVisible, setMenuVisible] = useState(false);
@@ -98,7 +100,14 @@ const DoctorHomeScreen = () => {
 
           <TouchableOpacity 
             style={styles.statCard}
-            onPress={() => router.push('/Appointments')}
+            onPress={() =>
+              router.push({
+                      pathname: '/Appointments',
+                      params: {
+                        scope: "today"
+                      },
+                    })
+            }
           >
             <MaterialIcons name="event" size={24} color="#284b63" />
             <Text style={styles.statValue}>6</Text>
@@ -119,7 +128,12 @@ const DoctorHomeScreen = () => {
         <Text style={styles.sectionTitle}>Quick Actions</Text>
         <View style={styles.actionsContainer}>
           <ActionButton icon="add" label="New Patient" onPress={() => handleActionPress('NewPatient')} />
-          <ActionButton icon="list" label="Appointments" onPress={() => handleActionPress('Appointments')} />
+          <ActionButton icon="list" label="Appointments" onPress={() => router.push({
+                      pathname: '/Appointments',
+                      params: {
+                        scope: "all"
+                      },
+                    })} />
           <ActionButton icon="assignment" label="Reports" onPress={() => handleActionPress('Reports')} />
           <ActionButton icon="chat" label="Messages" onPress={() => router.replace('/(tabs)/chat')} />
         </View>
@@ -128,7 +142,7 @@ const DoctorHomeScreen = () => {
         <Text style={styles.sectionTitle}>Recent Patients</Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false}>
           {recentPatients.map((patient) => (
-            <PatientCard key={patient.id} patient={patient} />
+            <PatientCard key={patient.id} patient={patient} router={router}/>
           ))}
         </ScrollView>
       </ScrollView>
@@ -161,7 +175,13 @@ const ActionButton = ({ icon, label, onPress }) => (
   </TouchableOpacity>
 );
 
-const PatientCard = ({ patient }) => (
+const PatientCard = ({ patient , router}) => (
+  <TouchableOpacity onPress={() =>
+      router.push({
+        pathname: '/create-medication',   // medication‑creation screen
+        params:  { patientId: patient.id },
+      })
+    }>
   <View style={styles.patientCard}>
     <Text style={styles.patientName}>{patient.name}</Text>
     <Text style={styles.patientDetail}>Last Visit: {patient.lastVisit}</Text>
@@ -169,6 +189,7 @@ const PatientCard = ({ patient }) => (
       <Text style={styles.statusText}>{patient.status}</Text>
     </View>
   </View>
+  </TouchableOpacity>
 );
 
 const MenuItem = ({ icon, label, onPress }) => (
